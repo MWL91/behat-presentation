@@ -42,4 +42,4 @@ default:
       laravel: ~
 ```
 
-Out testing env will be .env.testing. We also will use laravel session, in case of using `Mink Extention` that allows us to do browser tests.
+Our testing env will be .env.testing. We also will use laravel session, in case of using `Mink Extention` that allows us to do browser tests.
