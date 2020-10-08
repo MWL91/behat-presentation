@@ -43,3 +43,26 @@ default:
 ```
 
 Our testing env will be .env.testing. We also will use laravel session, in case of using `Mink Extention` that allows us to do browser tests.
+
+```
+cp .env.example .env.test
+```
+
+Also in our test we want to use sqlite database, so we will change database config to:
+
+```
+DB_CONNECTION=sqlite
+DB_HOST=127.0.0.1
+DB_PORT=3306
+#DB_DATABASE=laravel
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+And create a new database.sqlite in database directory.
+
+```
+touch database/database.sqlite
+```
+
+Now we are ready to go with our environment using behat.
