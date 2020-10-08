@@ -30,4 +30,18 @@ Now you are able to add required dev dependencies using:
 composer require behat/behat behat/mink friends-of-behat/mink-extension laracasts/behat-laravel-extension:"dev-master as 1.1" --dev
 ```
 
+After installation, we also need to configure our behat with behat.yml file. Create `behat.yml` file with contents below:
+
+```
+default:
+  extensions:
+    Laracasts\Behat:
+      env_path: .env.testing
+    Behat\MinkExtension:
+      default_session: laravel
+      laravel: ~
+```
+
+Our testing env will be .env.testing. We also will use laravel session, in case of using `Mink Extention` that allows us to do browser tests.
+
 ## Stage 2 - first scenario
