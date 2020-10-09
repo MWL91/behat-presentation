@@ -173,3 +173,124 @@ Ahoy matey!: Rent a car
 ```
 
 Now we have our first scenario, so it's time to write some code!
+
+## Stage 3 - finally write some code
+
+This may be a little boring, because we didn't write even line of code yet.
+
+Yes, and it's good approach! First, you need to define what you want to achieve, then you should write real code.
+
+Behat works great, when you don't feel the reason for using TDD. 
+Now you don't need to use non-existing classes, to define system expectations - you can use human language.
+
+Using our feature file, we are able now to generate code to test. 
+Type `vendor/bin/behat`, then select FeatureContext, and you will see generated test methods:
+
+```
+    /**
+     * @Given there is a :arg1, that was born in :arg2-:arg3-:arg4
+     */
+    public function thereIsAThatWasBornIn($arg1, $arg2, $arg3, $arg4)
+    {
+        throw new PendingException();
+    }
+
+    /**
+     * @When :arg1, wants to rent a car
+     */
+    public function wantsToRentACar($arg1)
+    {
+        throw new PendingException();
+    }
+
+    /**
+     * @Then :arg1 will be able to rent a car
+     */
+    public function willBeAbleToRentACar($arg1)
+    {
+        throw new PendingException();
+    }
+
+    /**
+     * @Then :arg1 will be not able to rent a car
+     */
+    public function willBeNotAbleToRentACar($arg1)
+    {
+        throw new PendingException();
+    }
+```
+
+We need them, otherwise Behat will tell us, that 
+> FeatureContext has missing steps
+
+You don't have to copy and paste them, you can automatically add them to FeatureContext, using
+
+```
+vendor/bin/behat --dry-run --append-snippets
+```
+
+### *Stage 3.1* - first given handle
+
+As you can see, now when you run `vendor/bin/behat`, Behat will tell you, that you need to write pending definition.
+
+All your methods throws now `PendingException` - it's time to change that, let's start with first method.
+
+```php
+/**
+ * @Given there is a :arg1, that was born in :arg2-:arg3-:arg4
+ */
+public function thereIsAThatWasBornIn($arg1, $arg2, $arg3, $arg4)
+{
+    throw new PendingException();
+}
+```
+
+As you can see, our sentence
+
+> there is a "Tabaluga Dragon", that was born in 1997-10-04
+
+was changed to comment and method `thereIsAThatWasBornIn`. 
+
+Behat automatically find that we have string parameter between `"..."` and found numbers.
+In practice, we will have call like:
+
+```php
+$featureContext = new FeatureContext();
+$featureContext->thereIsAThatWasBornIn("Tabaluga Dragon", 1997, 10, 04);
+```
+
+It's also not a problem to change arguments name.
+
+Let's write our method then:
+
+```php
+/**
+ * @Given there is a :arg1, that was born in :arg2-:arg3-:arg4
+ */
+public function thereIsAThatWasBornIn($arg1, $arg2, $arg3, $arg4)
+{
+    throw new PendingException();
+}
+```
+
+Also, we need to update our user migration, and add user birthday.
+
+```php
+// update migration
+Schema::create('users', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('email')->unique();
+    $table->timestamp('email_verified_at')->nullable();
+    $table->string('password');
+    $table->rememberToken();
+    $table->date('birthday');
+    $table->timestamps();
+});
+
+// also add cast to User model
+protected $casts = [
+    'email_verified_at' => 'datetime',
+    'birthday' => 'date'
+];
+```
