@@ -45,7 +45,7 @@ default:
 Our testing env will be .env.testing. We also will use laravel session, in case of using `Mink Extention` that allows us to do browser tests.
 
 ```
-cp .env.example .env.test
+cp .env.example .env.testing
 ```
 
 Also in our test we want to use sqlite database, so we will change database config to:
