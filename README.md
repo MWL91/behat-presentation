@@ -265,15 +265,21 @@ Let's write our method then:
 
 ```php
 /**
- * @Given there is a :arg1, that was born in :arg2-:arg3-:arg4
+ * @Given there is a :customer, that was born in :year-:month-:day
  */
-public function thereIsAThatWasBornIn($arg1, $arg2, $arg3, $arg4)
+public function thereIsAThatWasBornIn($customer, $year, $month, $day)
 {
-    throw new PendingException();
+    User::factory()->create(['name' => $customer, 'birthday' => Carbon::create($year, $month, $day)]);
 }
 ```
 
-Also, we need to update our user migration, and add user birthday.
+We will use database for our tests, so for that we will use DatabaseTransaction trait.
+
+```php
+use \Laracasts\Behat\Context\DatabaseTransactions;
+```
+
+Also, we need to update our user model and migration.
 
 ```php
 // update migration
@@ -287,10 +293,44 @@ Schema::create('users', function (Blueprint $table) {
     $table->date('birthday');
     $table->timestamps();
 });
+```
 
+And casts birthday as a date
+
+```php
 // also add cast to User model
 protected $casts = [
     'email_verified_at' => 'datetime',
     'birthday' => 'date'
 ];
 ```
+
+We have there some code, so let's try to run behat again:
+```
+marcinlenkowski@MBP-Marcin behat-presentation % vendor/bin/behat         
+Feature: Rent a car
+  In order to rent a car
+  As a customer
+  I need to be able to order a car
+  
+  Rule:
+  - Customer have to have at least 18yo
+  - Customer may rent one car at a time
+  - Customer may rent another car if return current
+  - There are limited numbers of cars, when it's rented customer may not rent it
+
+  Scenario: I can rent a car if i have 18yo                         # features/rentacar.feature:12
+    Given there is a "Tabaluga Dragon", that was born in 1997-10-04 # FeatureContext::thereIsAThatWasBornIn()
+    And there is a "Minion", that was born in 2015-06-26            # FeatureContext::thereIsAThatWasBornIn()
+    When "Tabaluga Dragon", wants to rent a car                     # FeatureContext::wantsToRentACar()
+      TODO: write pending definition
+    And "Minion", wants to rent a car                               # FeatureContext::wantsToRentACar()
+    Then "Tabaluga Dragon" will be able to rent a car               # FeatureContext::willBeAbleToRentACar()
+    But "Minion" will be not able to rent a car                     # FeatureContext::willBeNotAbleToRentACar()
+
+1 scenario (1 pending)
+6 steps (2 passed, 1 pending, 3 skipped)
+0m0.22s (26.90Mb)
+```
+
+You can see, that we've already pass 2 steps. Mr. Tabaluga, and Minion has been created.
