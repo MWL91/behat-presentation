@@ -7,6 +7,7 @@ use Behat\Gherkin\Node\PyStringNode;
 use Behat\Gherkin\Node\TableNode;
 use Behat\MinkExtension\Context\MinkContext;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Laracasts\Behat\Context\DatabaseTransactions;
 
 /**
@@ -15,6 +16,8 @@ use Laracasts\Behat\Context\DatabaseTransactions;
 class FeatureContext extends MinkContext implements Context
 {
     use DatabaseTransactions;
+
+    private Collection $users;
 
     /**
      * Initializes context.
@@ -25,6 +28,7 @@ class FeatureContext extends MinkContext implements Context
      */
     public function __construct()
     {
+        $this->users = new Collection();
     }
 
     /**
@@ -32,7 +36,7 @@ class FeatureContext extends MinkContext implements Context
      */
     public function thereIsAThatWasBornIn($customer, $year, $month, $day)
     {
-        User::factory()->create(['name' => $customer, 'birthday' => Carbon::create($year, $month, $day)]);
+        $this->users->put($customer, User::factory()->create(['name' => $customer, 'birthday' => Carbon::create($year, $month, $day)]));
     }
 
     /**
