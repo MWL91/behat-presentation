@@ -1,0 +1,7 @@
+default:
+  extensions:
+    Laracasts\Behat:
+      env_path: .env.testing
+    Behat\MinkExtension:
+      default_session: laravel
+      laravel: ~
