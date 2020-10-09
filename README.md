@@ -269,14 +269,29 @@ Let's write our method then:
  */
 public function thereIsAThatWasBornIn($customer, $year, $month, $day)
 {
-    User::factory()->create(['name' => $customer, 'birthday' => Carbon::create($year, $month, $day)]);
+    $this->users->put($customer, User::factory()->create(['name' => $customer, 'birthday' => Carbon::create($year, $month, $day)]));
 }
 ```
 
 We will use database for our tests, so for that we will use DatabaseTransaction trait.
+Also, we should define users property.
 
 ```php
 use \Laracasts\Behat\Context\DatabaseTransactions;
+
+private Collection $users;
+
+/**
+ * Initializes context.
+ *
+ * Every scenario gets its own context instance.
+ * You can also pass arbitrary arguments to the
+ * context constructor through behat.yml.
+ */
+public function __construct()
+{
+    $this->users = new Collection();
+}
 ```
 
 Also, we need to update our user model and migration.
