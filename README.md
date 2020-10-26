@@ -245,7 +245,7 @@ Type `vendor/bin/behat`, then select FeatureContext, and you will see generated 
     }
 ```
 
-We need them, otherwise Behat will tell us, that 
+We need them to describe steps in our process, otherwise Behat will tell us, that 
 > FeatureContext has missing steps
 
 You don't have to copy and paste them, you can automatically add them to FeatureContext, using
@@ -274,9 +274,9 @@ As you can see, our sentence
 
 > there is a "Tabaluga Dragon", that was born in 1997-10-04
 
-was changed to comment and method `thereIsAThatWasBornIn`. 
+was changed to method `thereIsAThatWasBornIn`. 
 
-Behat automatically find that we have string parameter between `"..."` and found numbers.
+Behat automatically find that we have string parameter between `"..."` and found all numbers.
 In practice, we will have call like:
 
 ```php
@@ -284,17 +284,18 @@ $featureContext = new FeatureContext();
 $featureContext->thereIsAThatWasBornIn("Tabaluga Dragon", 1997, 10, 04);
 ```
 
-It's also not a problem to change arguments name.
-
-Let's write our method then:
+It's also not a problem to change arguments names.
+Now let's update our FeatureContext class with real code:
 
 ```php
+private User $user;
+
 /**
  * @Given there is a :customer, that was born in :year-:month-:day
  */
 public function thereIsAThatWasBornIn($customer, $year, $month, $day)
 {
-    $this->users->put($customer, User::factory()->create(['name' => $customer, 'birthday' => Carbon::create($year, $month, $day)]));
+    $this->user = User::factory()->create(['name' => $customer, 'birthday' => Carbon::create($year, $month, $day)]);
 }
 ```
 
@@ -304,19 +305,7 @@ Also, we should define users property.
 ```php
 use \Laracasts\Behat\Context\DatabaseTransactions;
 
-private Collection $users;
-
-/**
- * Initializes context.
- *
- * Every scenario gets its own context instance.
- * You can also pass arbitrary arguments to the
- * context constructor through behat.yml.
- */
-public function __construct()
-{
-    $this->users = new Collection();
-}
+private User $user;
 ```
 
-Now we have our first scenario, so it's time to write some code!
+Now when we run `vendor/bin/behat` you can see that we have first step pass, and for `When` we have to write definition.
