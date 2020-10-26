@@ -9,11 +9,12 @@ Install laravel like usually, for example using:
 composer create-project --prefer-dist laravel/laravel behat-presentation
 ```
 
-There is one library, that supports Behat on Laravel, and it's not supported anymore.
+Behat, as you will see soon is super solution, but unfortunately poor supported by Laravel.
+There is only one library, that supports Behat on Laravel from laracast, but... 
+It dosn't work with new Laravel version, and seems to be not supported anymore.
 
-For start working with behat, you need to first fix `laracasts/behat-laravel-extension`. 
-
-To do that, add to composer file following repository, that contains fix fork.
+We can fix that by updating some code, so I've created repository fork for that.
+First, let's add repository to our composer file:
 
 ```
 "repositories": [
