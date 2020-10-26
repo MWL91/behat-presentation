@@ -9,7 +9,7 @@ Install laravel like usually, for example using:
 composer create-project --prefer-dist laravel/laravel behat-presentation
 ```
 
-Behat, as you will see soon is super solution, but unfortunately poor supported by Laravel.
+Behat, as you will see soon is great test framework, but unfortunately poor supported by Laravel.
 There is only one library, that supports Behat on Laravel from laracast, but... 
 It dosn't work with new Laravel version, and seems to be not supported anymore.
 
