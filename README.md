@@ -274,7 +274,7 @@ As you can see, our sentence
 
 > there is a "Tabaluga Dragon", that was born in 1997-10-04
 
-was changed to method `thereIsAThatWasBornIn`. 
+was changed to method `thereIsAThatWasBornIn`.
 
 Behat automatically find that we have string parameter between `"..."` and found all numbers.
 In practice, we will have call like:
@@ -284,8 +284,41 @@ $featureContext = new FeatureContext();
 $featureContext->thereIsAThatWasBornIn("Tabaluga Dragon", 1997, 10, 04);
 ```
 
-It's also not a problem to change arguments names.
-Now let's update our FeatureContext class with real code:
+Tests, whether or not created under BDD, should work under Arrange - Act - Assert.
+Behat works the same way, and in next stage we implement that in code.
+
+For current scenarios we used only one sentence for AAA, but often, you may need to use more. For that you may use `And` and `But` operators.
+There is no difference between them in practice. Those operators may be used also for Acting, or Asserting.
+
+```gherkin
+  Scenario: I can't rent a car if i have 18yo
+    Given there is a "Tabaluga Dragon", that was born in 1997-10-04
+    And has 1 rented cars
+    But dosn't have money
+    When he wants to rent a car
+    Then he will be not able to rent a car
+```
+
+## Stage 4  - *Arrange – Act – Assert* this is how the tests works
+
+It's time to do implementation of our scenarios. Let's create Arrange step.
+Fill thereIsAThatWasBornIn with user factory. We added to user model birthday field, and cast it as date.
+
+```php
+public function up()
+{
+    Schema::create('users', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('email')->unique();
+        $table->timestamp('email_verified_at')->nullable();
+        $table->string('password');
+        $table->rememberToken();
+        $table->date('birthday');
+        $table->timestamps();
+    });
+}
+```
 
 ```php
 private User $user;
@@ -299,8 +332,8 @@ public function thereIsAThatWasBornIn($customer, $year, $month, $day)
 }
 ```
 
-We will use database for our tests, so for that we will use DatabaseTransaction trait.
-Also, we should define users property.
+As we going to use sqlite to our tests, we may use DatabaseTransaction trait.
+Also, we should define user as class property.
 
 ```php
 use \Laracasts\Behat\Context\DatabaseTransactions;
@@ -308,24 +341,7 @@ use \Laracasts\Behat\Context\DatabaseTransactions;
 private User $user;
 ```
 
-Now when we run `vendor/bin/behat` you can see that we have first step pass, and for `When` we have to write definition.
-
-## Stage 4  - *Arrange – Act – Assert* this is how the tests works
-
-Tests, whether or not created under BDD, should work under Arrange - Act - Assert.
-Behat works the same way, and the first one we already have. 
-
-If you need to arrange some more operations, you are able to do that using `And` and `But` operators. 
-There is no difference between them in practice. Those operators may be used also for Acting, or Asserting.
-
-```gherkin
-  Scenario: I can't rent a car if i have 18yo
-    Given there is a "Tabaluga Dragon", that was born in 1997-10-04
-    And has 1 rented cars
-    But dosn't have money
-    When he wants to rent a car
-    Then he will be not able to rent a car
-```
+Now when we run `vendor/bin/behat` you can see that we have first step pass.
 
 ### Stage 4.1 - Act
 
@@ -446,58 +462,53 @@ Now when we run `vendor/bin/behat` we will have 2 steps passed. Now we need to w
 
 ### Stage 4.2 - Assert
 
-...
-
----
-
-
-
-Create class `App\Services\CarRentalService` with following code:
+Now, final step - we need to check if our code works like expected.
 
 ```php
-<?php
-
-namespace App\Services;
-
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Validator;
-
-class CarRentalService
+/**
+ * @Then :customer will be able to rent a car
+ */
+public function willBeAbleToRentACar($customer)
 {
-    private const MATURE_YO = 18;
-
-    public function canRentACar(User $user): bool
-    {
-        $validator = Validator::make([
-            'birthday' => $user->birthday
-        ], [
-            'birthday' => ['date', 'before:' . Carbon::now()->subYears(self::MATURE_YO)->format('Y-m-d')],
-        ]);
-
-        return !$validator->fails();
-    }
-}
-```
-
-Also add casts `birthday` as date to `User` model.
-
-Now we need to use created code to wantsToRentACar method in FeatureContext.
-
-```php
-private CarRentalService $carRentalService;
-
-public function __construct()
-{
-    $this->carRentalService  = resolve(CarRentalService::class);
+    $this->response->assertCreated();
 }
 
 /**
- * @When :customer, wants to rent a car
+ * @Then :customer will be not able to rent a car
  */
-public function wantsToRentACar($customer)
+public function willBeNotAbleToRentACar($customer)
 {
-    $this->canRentCar = $this->carRentalService->canRentACar($this->user);
+    $this->response->assertStatus(403);
 }
 ```
 
-...
+After running behat we will receive:
+
+```
+Feature: Rent a car
+  In order to rent a car
+  As a customer
+  I need to be able to order a car
+  
+  Rule:
+  - Customer have to have at least 18yo
+  - Customer may rent one car at a time
+  - There are limited numbers of cars, customer may not rent reserved car
+
+  Scenario: I can rent a car if i have 18yo                         # features/rentacar.feature:11
+    Given there is a "Tabaluga Dragon", that was born in 1997-10-04 # FeatureContext::thereIsAThatWasBornIn()
+    When "Tabaluga Dragon", wants to rent a car                     # FeatureContext::wantsToRentACar()
+    Then "Tabaluga Dragon" will be able to rent a car               # FeatureContext::willBeAbleToRentACar()
+
+  Scenario: I can't rent a car if i don't have 18yo        # features/rentacar.feature:16
+    Given there is a "Minion", that was born in 2015-06-26 # FeatureContext::thereIsAThatWasBornIn()
+    When "Minion", wants to rent a car                     # FeatureContext::wantsToRentACar()
+    Then "Minion" will be not able to rent a car           # FeatureContext::willBeNotAbleToRentACar()
+
+2 scenarios (2 passed)
+6 steps (6 passed)
+0m0.29s (30.14Mb)
+```
+
+So our both tests passed! As you see, we used the same methods for arrange, and act, but different for asserts.
+Now if you would like to implement more features, you can use the same syntax, and check other feature, without writing new pending definitions.

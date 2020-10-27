@@ -61,18 +61,18 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
-     * @Then :arg1 will be able to rent a car
+     * @Then :customer will be able to rent a car
      */
-    public function willBeAbleToRentACar($arg1)
+    public function willBeAbleToRentACar($customer)
     {
-        throw new PendingException();
+        $this->response->assertCreated();
     }
 
     /**
-     * @Then :arg1 will be not able to rent a car
+     * @Then :customer will be not able to rent a car
      */
-    public function willBeNotAbleToRentACar($arg1)
+    public function willBeNotAbleToRentACar($customer)
     {
-        throw new PendingException();
+        $this->response->assertStatus(403);
     }
 }
