@@ -309,3 +309,195 @@ private User $user;
 ```
 
 Now when we run `vendor/bin/behat` you can see that we have first step pass, and for `When` we have to write definition.
+
+## Stage 4  - *Arrange – Act – Assert* this is how the tests works
+
+Tests, whether or not created under BDD, should work under Arrange - Act - Assert.
+Behat works the same way, and the first one we already have. 
+
+If you need to arrange some more operations, you are able to do that using `And` and `But` operators. 
+There is no difference between them in practice. Those operators may be used also for Acting, or Asserting.
+
+```gherkin
+  Scenario: I can't rent a car if i have 18yo
+    Given there is a "Tabaluga Dragon", that was born in 1997-10-04
+    And has 1 rented cars
+    But dosn't have money
+    When he wants to rent a car
+    Then he will be not able to rent a car
+```
+
+### Stage 4.1 - Act
+
+Let's write implementation code for our test. We will do that by creating endpoint for car rent.
+
+`php artisan make:controller RentACarController --api`
+
+Then, add the endpoint to api routes:
+
+```php
+use App\Http\Controllers\RentACarController;
+
+Route::post('/rent', [RentACarController::class, 'store']);
+```
+
+Now let's add FormRequest for validating our credentials.
+
+`php artisan make:request RentACarRequest`
+
+```php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
+
+class RentACarRequest extends FormRequest
+{
+
+    const MATURE_YEARS = 18;
+
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return $this->user()->birthday < Carbon::now()->subYears(self::MATURE_YEARS)->format('Y-m-d');
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+        ];
+    }
+}
+```
+
+And finally update `store` method in our controller:
+
+```php
+use App\Http\Requests\RentACarRequest;
+use Illuminate\Http\JsonResponse;
+
+/**
+ * @param RentACarRequest $request
+ * @return JsonResponse
+ */
+public function store(RentACarRequest $request): JsonResponse
+{
+    return new JsonResponse(['status' => true, 'message' => 'Booking has been created'], 201);
+}
+```
+
+So we have simple API that dosn't do anything smart yet, but respose with success or not.
+We can use it already test it with our scenario.
+
+For that, we are going to use Laravel testing soultions, that are not prepared in the box like normal tests, 
+so we will need to add some traits that laravel already has, and declare application.
+
+```php
+// ...
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithAuthentication;
+use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
+use Tests\CreatesApplication;
+// ...
+
+class FeatureContext extends MinkContext implements Context
+{
+    use InteractsWithAuthentication;
+    use MakesHttpRequests;
+    use CreatesApplication;
+    
+    private User $user;
+    private Application $app;
+
+    /**
+     * Initializes context.
+     *
+     * Every scenario gets its own context instance.
+     * You can also pass arbitrary arguments to the
+     * context constructor through behat.yml.
+     */
+    public function __construct()
+    {
+        $this->app = $this->createApplication();
+    }
+
+    /**
+     * @When :customer, wants to rent a car
+     */
+    public function wantsToRentACar($customer)
+    {
+        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent');
+    }
+}
+```
+
+Now when we run `vendor/bin/behat` we will have 2 steps passed. Now we need to write the last one, asserting.
+
+### Stage 4.2 - Assert
+
+...
+
+---
+
+
+
+Create class `App\Services\CarRentalService` with following code:
+
+```php
+<?php
+
+namespace App\Services;
+
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Validator;
+
+class CarRentalService
+{
+    private const MATURE_YO = 18;
+
+    public function canRentACar(User $user): bool
+    {
+        $validator = Validator::make([
+            'birthday' => $user->birthday
+        ], [
+            'birthday' => ['date', 'before:' . Carbon::now()->subYears(self::MATURE_YO)->format('Y-m-d')],
+        ]);
+
+        return !$validator->fails();
+    }
+}
+```
+
+Also add casts `birthday` as date to `User` model.
+
+Now we need to use created code to wantsToRentACar method in FeatureContext.
+
+```php
+private CarRentalService $carRentalService;
+
+public function __construct()
+{
+    $this->carRentalService  = resolve(CarRentalService::class);
+}
+
+/**
+ * @When :customer, wants to rent a car
+ */
+public function wantsToRentACar($customer)
+{
+    $this->canRentCar = $this->carRentalService->canRentACar($this->user);
+}
+```
+
+...

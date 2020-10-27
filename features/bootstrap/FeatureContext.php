@@ -7,13 +7,30 @@ use Behat\Gherkin\Node\PyStringNode;
 use Behat\Gherkin\Node\TableNode;
 use Behat\MinkExtension\Context\MinkContext;
 use Carbon\Carbon;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithAuthentication;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithConsole;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithContainer;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithDatabase;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithExceptionHandling;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithTime;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
+use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
+use Illuminate\Foundation\Testing\Concerns\MocksApplicationServices;
+use Tests\CreatesApplication;
 
 /**
  * Defines application features from the specific context.
  */
 class FeatureContext extends MinkContext implements Context
 {
+    use MakesHttpRequests,
+        InteractsWithAuthentication,
+        CreatesApplication;
+
     private User $user;
+    private Application $app;
 
     /**
      * Initializes context.
@@ -24,6 +41,7 @@ class FeatureContext extends MinkContext implements Context
      */
     public function __construct()
     {
+        $this->app = $this->createApplication();
     }
 
     /**
@@ -35,11 +53,11 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
-     * @When :arg1, wants to rent a car
+     * @When :customer, wants to rent a car
      */
-    public function wantsToRentACar($arg1)
+    public function wantsToRentACar($customer)
     {
-        throw new PendingException();
+        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent');
     }
 
     /**
