@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Car;
 use App\Models\User;
 use Behat\Behat\Tester\Exception\PendingException;
 use Behat\Behat\Context\Context;
@@ -18,6 +19,8 @@ use Illuminate\Foundation\Testing\Concerns\InteractsWithTime;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
 use Illuminate\Foundation\Testing\Concerns\MocksApplicationServices;
+use Laracasts\Behat\Context\DatabaseTransactions;
+use PHPUnit\Framework\Assert;
 use Tests\CreatesApplication;
 
 /**
@@ -25,7 +28,8 @@ use Tests\CreatesApplication;
  */
 class FeatureContext extends MinkContext implements Context
 {
-    use MakesHttpRequests,
+    use DatabaseTransactions,
+        MakesHttpRequests,
         InteractsWithAuthentication,
         CreatesApplication;
 
@@ -53,7 +57,7 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
-     * @Given :arg1 has already rented :arg2 car
+     * @Given :customer has already rented :carName car
      */
     public function hasAlreadyRentedCar($customer, $carName)
     {
@@ -61,11 +65,30 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
-     * @When :customer, wants to rent a car
+     * @Given there are following cars:
      */
-    public function wantsToRentACar($customer)
+    public function thereAreFollowingCars(TableNode $table)
     {
-        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent');
+        Car::insert($table->getHash());
+    }
+
+    /**
+     * @Given there is :qty :carName car for rent
+     */
+    public function thereIsCarForRent($qty, $carName)
+    {
+        Car::insert([[
+            'car' => $carName,
+            'qty' => $qty
+        ]]);
+    }
+
+    /**
+     * @When :customer, wants to rent :carName car
+     */
+    public function wantsToRentACar($customer, $brand)
+    {
+        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent', ['car' => $brand]);
     }
 
     /**
@@ -82,5 +105,22 @@ class FeatureContext extends MinkContext implements Context
     public function willBeNotAbleToRentACar($customer)
     {
         $this->response->assertStatus(403);
+    }
+
+    /**
+     * @Then :customer will have :carName car
+     */
+    public function willHaveCar($customer, $carName)
+    {
+        $this->user->refresh();
+        Assert::assertEquals($carName, $this->user->car);
+    }
+
+    /**
+     * @Then there will be :qty :carName cars available
+     */
+    public function thereWillBeCarsAvailable($qty, $carName)
+    {
+        Assert::assertEquals($qty, Car::where('car', $carName)->first()->qty);
     }
 }

@@ -122,7 +122,7 @@ Let's try to create our first scenario to check first rule:
 ```gherkin
   Scenario: I can rent a car if i have 18yo
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
-    When "Tabaluga Dragon", wants to rent a car
+    When "Tabaluga Dragon", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be able to rent a car
 ```
 
@@ -148,7 +148,7 @@ We also should test some failure scenarios.
 ```gherkin
   Scenario: I can't rent a car if i don't have 18yo
     Given there is a "Minion", that was born in 2015-06-26
-    When "Minion", wants to rent a car
+    When "Minion", wants to rent "Jeep" car
     Then "Minion" will be not able to rent a car
 ```
 
@@ -164,8 +164,8 @@ For example
   Scenario: I can rent a car if i have 18yo
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
     And there is a "Minion", that was born in 2015-06-26
-    When "Tabaluga Dragon", wants to rent a car
-    And "Minion", wants to rent a car
+    When "Tabaluga Dragon", wants to rent "Toyota" car
+    And "Minion", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be able to rent a car
     But "Minion" will be not able to rent a car
 ```
@@ -196,7 +196,7 @@ Ahoy matey!: Rent a car
 
   Shiver me timbers: I can rent a car if i have 18yo
     Gangway! there is a "Tabaluga Dragon", that was born in 1997-10-04
-    Blimey! "Tabaluga Dragon", wants to rent a car
+    Blimey! "Tabaluga Dragon", wants to rent "Jeep" car
     Let go and haul "Tabaluga Dragon" will be able to rent a car
 ```
 
@@ -221,12 +221,13 @@ Type `vendor/bin/behat`, then select FeatureContext, and you will see generated 
     }
 
     /**
-     * @When :arg1, wants to rent a car
+     * @When :arg1, wants to rent :arg2 car
      */
-    public function wantsToRentACar($arg1)
+    public function wantsToRentCar($arg1, $arg2)
     {
         throw new PendingException();
     }
+
 
     /**
      * @Then :arg1 will be able to rent a car
@@ -449,11 +450,11 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
-     * @When :customer, wants to rent a car
+     * @When :customer, wants to rent :carName car
      */
-    public function wantsToRentACar($customer)
+    public function wantsToRentACar($customer, $brand)
     {
-        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent');
+        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent', ['car' => $brand]);
     }
 }
 ```
@@ -497,12 +498,12 @@ Feature: Rent a car
 
   Scenario: I can rent a car if i have 18yo                         # features/rentacar.feature:11
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04 # FeatureContext::thereIsAThatWasBornIn()
-    When "Tabaluga Dragon", wants to rent a car                     # FeatureContext::wantsToRentACar()
+    When "Tabaluga Dragon", wants to rent "Jeep" car                # FeatureContext::wantsToRentACar()
     Then "Tabaluga Dragon" will be able to rent a car               # FeatureContext::willBeAbleToRentACar()
 
   Scenario: I can't rent a car if i don't have 18yo        # features/rentacar.feature:16
     Given there is a "Minion", that was born in 2015-06-26 # FeatureContext::thereIsAThatWasBornIn()
-    When "Minion", wants to rent a car                     # FeatureContext::wantsToRentACar()
+    When "Minion", wants to rent "Jeep" car                # FeatureContext::wantsToRentACar()
     Then "Minion" will be not able to rent a car           # FeatureContext::willBeNotAbleToRentACar()
 
 2 scenarios (2 passed)
@@ -521,7 +522,7 @@ Let's write a new scenario for our second rule: Customer may rent one car at a t
 Scenario: I can rent one car at a time
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
     And "Tabaluga Dragon" has already rented "Jeep" car
-    When "Tabaluga Dragon", wants to rent a car
+    When "Tabaluga Dragon", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be not able to rent a car
 ```
 
@@ -583,3 +584,233 @@ We make some small refactor in our FormRequest.
 In real life, you probably don't want to check this in `authorize` method, but for our example this will be good enough.
 
 Let's run behat `vendor/bin/behat`. All that works! Quietly fast like for a new feature in system, isn't it?
+
+## Stage 6 - last scenario
+
+We already have validation tests, and we are not allowing users to rent a car if they are not matured, or already has one.
+Now it's time to write last scenario:
+
+> There are limited numbers of cars, customer may not rent reserved car.
+
+For that we will need to create real application logic. But first, like in TDD, we need to write scenario:
+
+```gherkin
+Scenario: I can't rent a car that is not available
+    Given there are following cars:
+    | car     | qty |
+    | Jeep    | 1   |
+    | Toyota  | 5   |
+
+    And there is a "Tabaluga Dragon", that was born in 1997-10-04
+    When "Tabaluga Dragon", wants to rent "Jeep" car
+    Then "Tabaluga Dragon" will be able to rent a car
+    And "Tabaluga Dragon" will have "Jeep" car
+    But there will be 0 "Jeep" cars available
+```
+
+First time we've used tables. After run `vendor/bin/behat` we'll generate new testing methods:
+
+```php
+/**
+ * @Given there are following cars:
+ */
+public function thereAreFollowingCars(TableNode $table)
+{
+    throw new PendingException();
+}
+
+/**
+ * @Then :arg1 will have :arg2 car
+ */
+public function willHaveCar($arg1, $arg2)
+{
+    throw new PendingException();
+}
+
+/**
+ * @Then there will be :arg2 :arg1 cars available
+ */
+public function thereWillBeCarsAvailable($arg1, $arg2)
+{
+    throw new PendingException();
+}
+```
+
+As you can see now in `public function thereAreFollowingCars(TableNode $table)` first parameter has now table attribute.
+We may use TableNode class like array. If we use it in foreach we get assoc table with keys `car` and `qty`.
+Also you can get an array using `$table->getHash()`, or if your table has indexes in rows `$table->getRowsHash()`.
+
+With that, we can create model and migration for cars: `php artisan make:model Car -m`.
+
+```php
+public function up()
+{
+    Schema::create('cars', function (Blueprint $table) {
+        $table->id();
+        $table->string('car');
+        $table->integer('qty');
+        $table->timestamps();
+    });
+}
+```
+
+Now, we are not going to create seeder for that, we just use input data from table, as `thereAreFollowingCars`.
+
+```php
+/**
+ * @Given there are following cars:
+ */
+public function thereAreFollowingCars(TableNode $table)
+{
+    Car::insert($table->getHash());
+}
+```
+
+Now when we have Arrange done, it's time to make Act step. 
+But wait - we don't need to write any tests for Act - that was already done.
+This is cool, you don't need to repeat your tests steps.
+
+### Stage 6.1 - Asserting
+
+Whatever you do TDD always force you to write code, that works. 
+Even if now we have checks that works, but dosn't do anything smart, next scenario force us to do our job right.
+We can't anymore pretend that our code works, so let's update user migration, and add him car attribute.
+
+```php
+public function up()
+{
+    Schema::create('users', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('email')->unique();
+        $table->timestamp('email_verified_at')->nullable();
+        $table->string('password');
+        $table->rememberToken();
+        $table->date('birthday');
+        $table->string('car')->nullable();
+        $table->timestamps();
+    });
+}
+```
+
+`php artisan migrate:fresh`
+
+Now in FeatureContext, let's add 
+
+```php
+use PHPUnit\Framework\Assert;
+
+/**
+ * @Then :customer will have :carName car
+ */
+public function willHaveCar($customer, $carName)
+{
+    $this->user->refresh();
+    Assert::assertEquals($carName, $this->user->car);
+}
+```
+
+Test will tell us, that we didn't assign car to user.
+
+```
+And "Tabaluga Dragon" will have "Jeep" car                    # FeatureContext::willHaveCar()
+      Failed asserting that null matches expected 'Jeep'.
+```
+
+Let's to that by creating RentACarService that will handle our code.
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\Car;
+use App\Models\User;
+
+class RentACarService
+{
+    public function rentCarAsUser(User $user, Car $car): void
+    {
+        if($car->qty <= 0) {
+            throw new \UnderflowException("Car is out of stock");
+        }
+
+        $car->qty -= 1;
+        $car->save(); // yes, this should be done in repository ;)
+
+        $user->car = $car->car;
+        $user->save(); // this too ;)
+    }
+}
+```
+
+And by updating controller:
+
+```php
+private RentACarService $rentACarService;
+
+/**
+ * RentACarController constructor.
+ * @param RentACarService $rentACarService
+ */
+public function __construct(RentACarService $rentACarService)
+{
+    $this->rentACarService = $rentACarService;
+}
+
+/**
+ * @param RentACarRequest $request
+ * @return JsonResponse
+ */
+public function store(RentACarRequest $request): JsonResponse
+{
+    $car = Car::where('car', $request->car)->first();
+    $this->rentACarService->rentCarAsUser($request->user(), $car);
+
+    return new JsonResponse(['status' => true, 'message' => 'Booking has been created'], 201);
+}
+```
+
+Also now, we should add test to `thereWillBeCarsAvailable`. 
+
+```php
+/**
+ * @Then there will be :qty :carName cars available
+ */
+public function thereWillBeCarsAvailable($qty, $carName)
+{
+    Assert::assertEquals($qty, Car::where('car', $carName)->first()->qty);
+}
+```
+
+After run `vendor/bin/behat`, our last scenario now working but... we have an issue with first test.
+We can fix it fast, by adding another Arrange sentence, so let's fix it:
+
+```gherkin
+Scenario: I can rent a car if i have 18yo
+    Given there is a "Tabaluga Dragon", that was born in 1997-10-04
+    And there is 1 "Jeep" car for rent
+    When "Tabaluga Dragon", wants to rent "Jeep" car
+    Then "Tabaluga Dragon" will be able to rent a car
+```
+
+Now we need to add new method to our FeatureContext
+
+```php
+/**
+ * @Given there is :qty :carName car for rent
+ */
+public function thereIsCarForRent($qty, $carName)
+{
+    Car::insert([[
+        'car' => $carName,
+        'qty' => $qty
+    ]]);
+}
+```
+
+And that's it! All test now works.
+
+And This is Behat! I hope you liked it :)
+
+*Created by Marcin Lenkowski for ESCOLA SA*

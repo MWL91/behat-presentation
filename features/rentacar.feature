@@ -10,16 +10,29 @@ Feature: Rent a car
 
   Scenario: I can rent a car if i have 18yo
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
-    When "Tabaluga Dragon", wants to rent a car
+    And there is 1 "Jeep" car for rent
+    When "Tabaluga Dragon", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be able to rent a car
 
   Scenario: I can't rent a car if i don't have 18yo
     Given there is a "Minion", that was born in 2015-06-26
-    When "Minion", wants to rent a car
+    When "Minion", wants to rent "Jeep" car
     Then "Minion" will be not able to rent a car
 
   Scenario: I can rent one car at a time
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
     And "Tabaluga Dragon" has already rented "Jeep" car
-    When "Tabaluga Dragon", wants to rent a car
+    When "Tabaluga Dragon", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be not able to rent a car
+
+  Scenario: I can't rent a car that is not available
+    Given there are following cars:
+      | car     | qty |
+      | Jeep    | 1   |
+      | Toyota  | 5   |
+
+    And there is a "Tabaluga Dragon", that was born in 1997-10-04
+    When "Tabaluga Dragon", wants to rent "Jeep" car
+    Then "Tabaluga Dragon" will be able to rent a car
+    And "Tabaluga Dragon" will have "Jeep" car
+    But there will be 0 "Jeep" cars available
