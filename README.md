@@ -512,3 +512,74 @@ Feature: Rent a car
 
 So our both tests passed! As you see, we used the same methods for arrange, and act, but different for asserts.
 Now if you would like to implement more features, you can use the same syntax, and check other feature, without writing new pending definitions.
+
+## Stage 5 - second scenario
+
+Let's write a new scenario for our second rule: Customer may rent one car at a time.
+
+```gherkin
+Scenario: I can rent one car at a time
+    Given there is a "Tabaluga Dragon", that was born in 1997-10-04
+    And "Tabaluga Dragon" has already rented "Jeep" car
+    When "Tabaluga Dragon", wants to rent a car
+    Then "Tabaluga Dragon" will be not able to rent a car
+```
+
+As you see, we need to write only one new definition to make it works, all others are already covered.
+
+Now when we run `vendor/bin/behat` we see that our new scenario dosn't have step. 
+When we select `FeatureContext` class, we will generate new definition, but as you see it'ss just one method.
+
+```php
+/**
+ * @Given :arg1 has already rented :arg2 car
+ */
+public function hasAlreadyRentedCar($arg1, $arg2)
+{
+    throw new PendingException();
+}
+```
+
+Now let's update this, by adding user car property. 
+We can use here database relations, but as it's just an example code, let's add just the name.
+
+```php
+/**
+ * @Given :customer has already rented :carName car$/
+ */
+public function hasAlreadyRentedCar($customer, $carName)
+{
+    $this->user->car = $carName;
+}
+```
+
+Now again let's run `vendor/bin/behat`. Our test of course didn't pass, because we didn't make required changes in code.
+
+Let's fix that by changing `RentACarRequest` class.
+
+```php
+public function authorize()
+{
+    return $this->canUserRentCar();
+}
+
+private function canUserRentCar(): bool
+{
+    return $this->isMature() && !$this->hasRentedCar();
+}
+
+private function isMature(): bool
+{
+    return $this->user()->birthday < Carbon::now()->subYears(self::MATURE_YEARS)->format('Y-m-d');
+}
+
+private function hasRentedCar(): bool
+{
+    return $this->user()->car !== null;
+}
+```
+
+We make some small refactor in our FormRequest. 
+In real life, you probably don't want to check this in `authorize` method, but for our example this will be good enough.
+
+Let's run behat `vendor/bin/behat`. All that works! Quietly fast like for a new feature in system, isn't it?

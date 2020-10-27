@@ -17,7 +17,22 @@ class RentACarRequest extends FormRequest
      */
     public function authorize()
     {
+        return $this->canUserRentCar();
+    }
+
+    private function canUserRentCar(): bool
+    {
+        return $this->isMature() && !$this->hasRentedCar();
+    }
+
+    private function isMature(): bool
+    {
         return $this->user()->birthday < Carbon::now()->subYears(self::MATURE_YEARS)->format('Y-m-d');
+    }
+
+    private function hasRentedCar(): bool
+    {
+        return $this->user()->car !== null;
     }
 
     /**

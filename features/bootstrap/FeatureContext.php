@@ -53,6 +53,14 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
+     * @Given :arg1 has already rented :arg2 car
+     */
+    public function hasAlreadyRentedCar($customer, $carName)
+    {
+        $this->user->car = $carName;
+    }
+
+    /**
      * @When :customer, wants to rent a car
      */
     public function wantsToRentACar($customer)
