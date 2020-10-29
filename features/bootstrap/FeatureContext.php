@@ -2,7 +2,6 @@
 
 use Behat\Behat\Tester\Exception\PendingException;
 use App\Models\User;
-use Behat\Behat\Tester\Exception\PendingException;
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\PyStringNode;
 use Behat\Gherkin\Node\TableNode;
@@ -54,7 +53,7 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
-     * @Given :arg1 has already rented :arg2 car
+     * @Given :customer has already rented :carName car
      */
     public function hasAlreadyRentedCar($customer, $carName)
     {
@@ -62,11 +61,11 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
-     * @When :customer, wants to rent a car
+     * @When :customer, wants to rent :carName car
      */
-    public function wantsToRentACar($customer)
+    public function wantsToRentACar($customer, $brand)
     {
-        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent');
+        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent', ['car' => $brand]);
     }
 
     /**
@@ -83,13 +82,5 @@ class FeatureContext extends MinkContext implements Context
     public function willBeNotAbleToRentACar($customer)
     {
         $this->response->assertStatus(403);
-    }
-
-    /**
-     * @Given :customer has already rented :carName car
-     */
-    public function hasAlreadyRentedCar($customer, $carName)
-    {
-        $this->user->car = $carName;
     }
 }
