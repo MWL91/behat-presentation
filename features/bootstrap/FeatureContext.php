@@ -1,33 +1,19 @@
 <?php
 
-use App\Models\User;
-use Behat\Behat\Tester\Exception\PendingException;
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\PyStringNode;
 use Behat\Gherkin\Node\TableNode;
 use Behat\MinkExtension\Context\MinkContext;
-use Carbon\Carbon;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithAuthentication;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithConsole;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithContainer;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithDatabase;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithExceptionHandling;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithTime;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
-use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
-use Illuminate\Foundation\Testing\Concerns\MocksApplicationServices;
-use Tests\CreatesApplication;
 
 /**
  * Defines application features from the specific context.
  */
 class FeatureContext extends MinkContext implements Context
 {
-    use MakesHttpRequests,
-        InteractsWithAuthentication,
-        CreatesApplication;
+    use DatabaseTransactions;
+    use InteractsWithAuthentication;
+    use MakesHttpRequests;
+    use CreatesApplication;
 
     private User $user;
     private Application $app;
@@ -53,11 +39,11 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
-     * @When :customer, wants to rent a car
+     * @When :customer, wants to rent :carName car
      */
-    public function wantsToRentACar($customer)
+    public function wantsToRentACar($customer, $brand)
     {
-        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent');
+        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent', ['car' => $brand]);
     }
 
     /**

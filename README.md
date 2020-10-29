@@ -382,7 +382,7 @@ class RentACarRequest extends FormRequest
      */
     public function authorize()
     {
-        return $this->user()->birthday < Carbon::now()->subYears(self::MATURE_YEARS)->format('Y-m-d');
+        return $this->user()->birthday < Carbon::now()->subYears(self::MATURE_YEARS);
     }
 
     /**
