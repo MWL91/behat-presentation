@@ -1,20 +1,15 @@
 <?php
 
-use App\Models\User;
-use Behat\Behat\Tester\Exception\PendingException;
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\PyStringNode;
 use Behat\Gherkin\Node\TableNode;
 use Behat\MinkExtension\Context\MinkContext;
-use Carbon\Carbon;
 
 /**
  * Defines application features from the specific context.
  */
 class FeatureContext extends MinkContext implements Context
 {
-    private User $user;
-
     /**
      * Initializes context.
      *
@@ -27,17 +22,17 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
-     * @Given there is a :customer, that was born in :year-:month-:day
+     * @Given there is a :customer, that was born in :y-:m-:d
      */
-    public function thereIsAThatWasBornIn($customer, $year, $month, $day)
+    public function thereIsAThatWasBornIn($customer, $y, $m, $d)
     {
-        $this->user = User::factory()->create(['name' => $customer, 'birthday' => Carbon::create($year, $month, $day)]);
+        throw new PendingException();
     }
 
     /**
-     * @When :arg1, wants to rent a car
+     * @When :arg1, wants to rent :arg2 car
      */
-    public function wantsToRentACar($arg1)
+    public function wantsToRentCar($arg1, $arg2)
     {
         throw new PendingException();
     }
