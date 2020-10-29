@@ -122,7 +122,7 @@ Let's try to create our first scenario to check first rule:
 ```gherkin
   Scenario: I can rent a car if i have 18yo
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
-    When "Tabaluga Dragon", wants to rent a car
+    When "Tabaluga Dragon", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be able to rent a car
 ```
 
@@ -148,7 +148,7 @@ We also should test some failure scenarios.
 ```gherkin
   Scenario: I can't rent a car if i don't have 18yo
     Given there is a "Minion", that was born in 2015-06-26
-    When "Minion", wants to rent a car
+    When "Minion", wants to rent "Jeep" car
     Then "Minion" will be not able to rent a car
 ```
 
@@ -164,8 +164,8 @@ For example
   Scenario: I can rent a car if i have 18yo
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
     And there is a "Minion", that was born in 2015-06-26
-    When "Tabaluga Dragon", wants to rent a car
-    And "Minion", wants to rent a car
+    When "Tabaluga Dragon", wants to rent "Toyota" car
+    And "Minion", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be able to rent a car
     But "Minion" will be not able to rent a car
 ```
@@ -196,6 +196,6 @@ Ahoy matey!: Rent a car
 
   Shiver me timbers: I can rent a car if i have 18yo
     Gangway! there is a "Tabaluga Dragon", that was born in 1997-10-04
-    Blimey! "Tabaluga Dragon", wants to rent a car
+    Blimey! "Tabaluga Dragon", wants to rent "Jeep" car
     Let go and haul "Tabaluga Dragon" will be able to rent a car
 ```
