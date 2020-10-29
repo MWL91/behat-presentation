@@ -70,5 +70,20 @@ Now we are ready to go with our environment using behat.
 
 ## Mink 1 - tests with Mink
 
-So, when we have configured our env, let's look at Mink tests.
-Now, Mink allows you to test application like it would be browser tests.
+Now, when we have our environment ready to go, we can start with initialize Behat.
+
+```
+vendor/bin/behat --init
+```
+
+This will create out first FeatureContext class, that we will use, to test our code.
+
+We will start with extend FeatureContext class with Mink extension.
+
+```php
+use Behat\MinkExtension\Context;
+
+class FeatureContext extends MinkContext implements Context
+```
+
+Now, when we run `vendor/bin/behat`, Bahat will tell us, that we don't have any scenarios and steps - time to create one.
