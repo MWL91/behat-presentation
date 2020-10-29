@@ -1,9 +1,16 @@
 <?php
 
+use App\Models\User;
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\PyStringNode;
 use Behat\Gherkin\Node\TableNode;
 use Behat\MinkExtension\Context\MinkContext;
+use Carbon\Carbon;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithAuthentication;
+use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
+use Laracasts\Behat\Context\DatabaseTransactions;
+use Tests\CreatesApplication;
 
 /**
  * Defines application features from the specific context.
