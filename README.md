@@ -87,3 +87,8 @@ class FeatureContext extends MinkContext implements Context
 ```
 
 Now, when we run `vendor/bin/behat`, Bahat will tell us, that we don't have any scenarios and steps - time to create one.
+
+## Mink 2 - ...
+
+So, when we have configured our env, let's look at Mink tests.
+Now, Mink allows you to test application like it would be browser tests.
