@@ -122,7 +122,7 @@ Let's try to create our first scenario to check first rule:
 ```gherkin
   Scenario: I can rent a car if i have 18yo
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
-    When "Tabaluga Dragon", wants to rent a car
+    When "Tabaluga Dragon", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be able to rent a car
 ```
 
@@ -148,7 +148,7 @@ We also should test some failure scenarios.
 ```gherkin
   Scenario: I can't rent a car if i don't have 18yo
     Given there is a "Minion", that was born in 2015-06-26
-    When "Minion", wants to rent a car
+    When "Minion", wants to rent "Jeep" car
     Then "Minion" will be not able to rent a car
 ```
 
@@ -164,8 +164,8 @@ For example
   Scenario: I can rent a car if i have 18yo
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
     And there is a "Minion", that was born in 2015-06-26
-    When "Tabaluga Dragon", wants to rent a car
-    And "Minion", wants to rent a car
+    When "Tabaluga Dragon", wants to rent "Toyota" car
+    And "Minion", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be able to rent a car
     But "Minion" will be not able to rent a car
 ```
@@ -196,7 +196,7 @@ Ahoy matey!: Rent a car
 
   Shiver me timbers: I can rent a car if i have 18yo
     Gangway! there is a "Tabaluga Dragon", that was born in 1997-10-04
-    Blimey! "Tabaluga Dragon", wants to rent a car
+    Blimey! "Tabaluga Dragon", wants to rent "Jeep" car
     Let go and haul "Tabaluga Dragon" will be able to rent a car
 ```
 
@@ -221,12 +221,13 @@ Type `vendor/bin/behat`, then select FeatureContext, and you will see generated 
     }
 
     /**
-     * @When :arg1, wants to rent a car
+     * @When :arg1, wants to rent :arg2 car
      */
-    public function wantsToRentACar($arg1)
+    public function wantsToRentCar($arg1, $arg2)
     {
         throw new PendingException();
     }
+
 
     /**
      * @Then :arg1 will be able to rent a car
@@ -449,11 +450,11 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
-     * @When :customer, wants to rent a car
+     * @When :customer, wants to rent :carName car
      */
-    public function wantsToRentACar($customer)
+    public function wantsToRentACar($customer, $brand)
     {
-        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent');
+        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent', ['car' => $brand]);
     }
 }
 ```
@@ -497,12 +498,12 @@ Feature: Rent a car
 
   Scenario: I can rent a car if i have 18yo                         # features/rentacar.feature:11
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04 # FeatureContext::thereIsAThatWasBornIn()
-    When "Tabaluga Dragon", wants to rent a car                     # FeatureContext::wantsToRentACar()
+    When "Tabaluga Dragon", wants to rent "Jeep" car                # FeatureContext::wantsToRentACar()
     Then "Tabaluga Dragon" will be able to rent a car               # FeatureContext::willBeAbleToRentACar()
 
   Scenario: I can't rent a car if i don't have 18yo        # features/rentacar.feature:16
     Given there is a "Minion", that was born in 2015-06-26 # FeatureContext::thereIsAThatWasBornIn()
-    When "Minion", wants to rent a car                     # FeatureContext::wantsToRentACar()
+    When "Minion", wants to rent "Jeep" car                # FeatureContext::wantsToRentACar()
     Then "Minion" will be not able to rent a car           # FeatureContext::willBeNotAbleToRentACar()
 
 2 scenarios (2 passed)
@@ -512,3 +513,74 @@ Feature: Rent a car
 
 So our both tests passed! As you see, we used the same methods for arrange, and act, but different for asserts.
 Now if you would like to implement more features, you can use the same syntax, and check other feature, without writing new pending definitions.
+
+## Stage 5 - second scenario
+
+Let's write a new scenario for our second rule: Customer may rent one car at a time.
+
+```gherkin
+Scenario: I can rent one car at a time
+    Given there is a "Tabaluga Dragon", that was born in 1997-10-04
+    And "Tabaluga Dragon" has already rented "Jeep" car
+    When "Tabaluga Dragon", wants to rent "Jeep" car
+    Then "Tabaluga Dragon" will be not able to rent a car
+```
+
+As you see, we need to write only one new definition to make it works, all others are already covered.
+
+Now when we run `vendor/bin/behat` we see that our new scenario dosn't have step. 
+When we select `FeatureContext` class, we will generate new definition, but as you see it'ss just one method.
+
+```php
+/**
+ * @Given :arg1 has already rented :arg2 car
+ */
+public function hasAlreadyRentedCar($arg1, $arg2)
+{
+    throw new PendingException();
+}
+```
+
+Now let's update this, by adding user car property. 
+We can use here database relations, but as it's just an example code, let's add just the name.
+
+```php
+/**
+ * @Given :customer has already rented :carName car$/
+ */
+public function hasAlreadyRentedCar($customer, $carName)
+{
+    $this->user->car = $carName;
+}
+```
+
+Now again let's run `vendor/bin/behat`. Our test of course didn't pass, because we didn't make required changes in code.
+
+Let's fix that by changing `RentACarRequest` class.
+
+```php
+public function authorize()
+{
+    return $this->canUserRentCar();
+}
+
+private function canUserRentCar(): bool
+{
+    return $this->isMature() && !$this->hasRentedCar();
+}
+
+private function isMature(): bool
+{
+    return $this->user()->birthday < Carbon::now()->subYears(self::MATURE_YEARS)->format('Y-m-d');
+}
+
+private function hasRentedCar(): bool
+{
+    return $this->user()->car !== null;
+}
+```
+
+We make some small refactor in our FormRequest. 
+In real life, you probably don't want to check this in `authorize` method, but for our example this will be good enough.
+
+Let's run behat `vendor/bin/behat`. All that works! Quietly fast like for a new feature in system, isn't it?
