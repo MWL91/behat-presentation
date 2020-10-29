@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\Car;
-use App\Models\User;
 use Behat\Behat\Tester\Exception\PendingException;
+use App\Models\User;
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\PyStringNode;
 use Behat\Gherkin\Node\TableNode;
@@ -65,25 +65,6 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
-     * @Given there are following cars:
-     */
-    public function thereAreFollowingCars(TableNode $table)
-    {
-        Car::insert($table->getHash());
-    }
-
-    /**
-     * @Given there is :qty :carName car for rent
-     */
-    public function thereIsCarForRent($qty, $carName)
-    {
-        Car::insert([[
-            'car' => $carName,
-            'qty' => $qty
-        ]]);
-    }
-
-    /**
      * @When :customer, wants to rent :carName car
      */
     public function wantsToRentACar($customer, $brand)
@@ -108,11 +89,18 @@ class FeatureContext extends MinkContext implements Context
     }
 
     /**
+     * @Given there are following cars:
+     */
+    public function thereAreFollowingCars(TableNode $table)
+    {
+        Car::insert($table->getHash());
+    }
+
+    /**
      * @Then :customer will have :carName car
      */
     public function willHaveCar($customer, $carName)
     {
-        $this->user->refresh();
         Assert::assertEquals($carName, $this->user->car);
     }
 
@@ -122,5 +110,16 @@ class FeatureContext extends MinkContext implements Context
     public function thereWillBeCarsAvailable($qty, $carName)
     {
         Assert::assertEquals($qty, Car::where('car', $carName)->first()->qty);
+    }
+
+    /**
+     * @Given there is :qty :carName car for rent
+     */
+    public function thereIsCarForRent($qty, $carName)
+    {
+        Car::insert([[
+            'car' => $carName,
+            'qty' => $qty
+        ]]);
     }
 }

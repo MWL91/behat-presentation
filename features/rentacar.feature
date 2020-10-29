@@ -25,14 +25,8 @@ Feature: Rent a car
     When "Tabaluga Dragon", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be not able to rent a car
 
-  Scenario: I can't rent a car that is not available
-    Given there are following cars:
-      | car     | qty |
-      | Jeep    | 1   |
-      | Toyota  | 5   |
-
-    And there is a "Tabaluga Dragon", that was born in 1997-10-04
-    When "Tabaluga Dragon", wants to rent "Jeep" car
-    Then "Tabaluga Dragon" will be able to rent a car
-    And "Tabaluga Dragon" will have "Jeep" car
-    But there will be 0 "Jeep" cars available
+  Scenario: I can rent one car at a time
+    Given there is a "Tabaluga Dragon", that was born in 1997-10-04
+    And "Tabaluga Dragon" has already rented "Jeep" car
+    When "Tabaluga Dragon", wants to rent a car
+    Then "Tabaluga Dragon" will be not able to rent a car
