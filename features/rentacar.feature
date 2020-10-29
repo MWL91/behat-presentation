@@ -10,10 +10,10 @@ Feature: Rent a car
 
   Scenario: I can rent a car if i have 18yo
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
-    When "Tabaluga Dragon", wants to rent a car
+    When "Tabaluga Dragon", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be able to rent a car
 
   Scenario: I can't rent a car if i don't have 18yo
     Given there is a "Minion", that was born in 2015-06-26
-    When "Minion", wants to rent a car
+    When "Minion", wants to rent "Jeep" car
     Then "Minion" will be not able to rent a car
