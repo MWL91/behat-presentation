@@ -122,7 +122,7 @@ Let's try to create our first scenario to check first rule:
 ```gherkin
   Scenario: I can rent a car if i have 18yo
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
-    When "Tabaluga Dragon", wants to rent a car
+    When "Tabaluga Dragon", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be able to rent a car
 ```
 
@@ -148,7 +148,7 @@ We also should test some failure scenarios.
 ```gherkin
   Scenario: I can't rent a car if i don't have 18yo
     Given there is a "Minion", that was born in 2015-06-26
-    When "Minion", wants to rent a car
+    When "Minion", wants to rent "Jeep" car
     Then "Minion" will be not able to rent a car
 ```
 
@@ -164,8 +164,8 @@ For example
   Scenario: I can rent a car if i have 18yo
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
     And there is a "Minion", that was born in 2015-06-26
-    When "Tabaluga Dragon", wants to rent a car
-    And "Minion", wants to rent a car
+    When "Tabaluga Dragon", wants to rent "Toyota" car
+    And "Minion", wants to rent "Jeep" car
     Then "Tabaluga Dragon" will be able to rent a car
     But "Minion" will be not able to rent a car
 ```
@@ -196,7 +196,7 @@ Ahoy matey!: Rent a car
 
   Shiver me timbers: I can rent a car if i have 18yo
     Gangway! there is a "Tabaluga Dragon", that was born in 1997-10-04
-    Blimey! "Tabaluga Dragon", wants to rent a car
+    Blimey! "Tabaluga Dragon", wants to rent "Jeep" car
     Let go and haul "Tabaluga Dragon" will be able to rent a car
 ```
 
@@ -221,12 +221,13 @@ Type `vendor/bin/behat`, then select FeatureContext, and you will see generated 
     }
 
     /**
-     * @When :arg1, wants to rent a car
+     * @When :arg1, wants to rent :arg2 car
      */
-    public function wantsToRentACar($arg1)
+    public function wantsToRentCar($arg1, $arg2)
     {
         throw new PendingException();
     }
+
 
     /**
      * @Then :arg1 will be able to rent a car
@@ -274,7 +275,7 @@ As you can see, our sentence
 
 > there is a "Tabaluga Dragon", that was born in 1997-10-04
 
-was changed to method `thereIsAThatWasBornIn`. 
+was changed to method `thereIsAThatWasBornIn`.
 
 Behat automatically find that we have string parameter between `"..."` and found all numbers.
 In practice, we will have call like:
@@ -284,8 +285,41 @@ $featureContext = new FeatureContext();
 $featureContext->thereIsAThatWasBornIn("Tabaluga Dragon", 1997, 10, 04);
 ```
 
-It's also not a problem to change arguments names.
-Now let's update our FeatureContext class with real code:
+Tests, whether or not created under BDD, should work under Arrange - Act - Assert.
+Behat works the same way, and in next stage we implement that in code.
+
+For current scenarios we used only one sentence for AAA, but often, you may need to use more. For that you may use `And` and `But` operators.
+There is no difference between them in practice. Those operators may be used also for Acting, or Asserting.
+
+```gherkin
+  Scenario: I can't rent a car if i have 18yo
+    Given there is a "Tabaluga Dragon", that was born in 1997-10-04
+    And has 1 rented cars
+    But dosn't have money
+    When he wants to rent a car
+    Then he will be not able to rent a car
+```
+
+## Stage 4  - *Arrange – Act – Assert* this is how the tests works
+
+It's time to do implementation of our scenarios. Let's create Arrange step.
+Fill thereIsAThatWasBornIn with user factory. We added to user model birthday field, and cast it as date.
+
+```php
+public function up()
+{
+    Schema::create('users', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('email')->unique();
+        $table->timestamp('email_verified_at')->nullable();
+        $table->string('password');
+        $table->rememberToken();
+        $table->date('birthday');
+        $table->timestamps();
+    });
+}
+```
 
 ```php
 private User $user;
@@ -299,8 +333,8 @@ public function thereIsAThatWasBornIn($customer, $year, $month, $day)
 }
 ```
 
-We will use database for our tests, so for that we will use DatabaseTransaction trait.
-Also, we should define users property.
+As we going to use sqlite to our tests, we may use DatabaseTransaction trait.
+Also, we should define user as class property.
 
 ```php
 use \Laracasts\Behat\Context\DatabaseTransactions;
@@ -308,4 +342,174 @@ use \Laracasts\Behat\Context\DatabaseTransactions;
 private User $user;
 ```
 
-Now when we run `vendor/bin/behat` you can see that we have first step pass, and for `When` we have to write definition.
+Now when we run `vendor/bin/behat` you can see that we have first step pass.
+
+### Stage 4.1 - Act
+
+Let's write implementation code for our test. We will do that by creating endpoint for car rent.
+
+`php artisan make:controller RentACarController --api`
+
+Then, add the endpoint to api routes:
+
+```php
+use App\Http\Controllers\RentACarController;
+
+Route::post('/rent', [RentACarController::class, 'store']);
+```
+
+Now let's add FormRequest for validating our credentials.
+
+`php artisan make:request RentACarRequest`
+
+```php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
+
+class RentACarRequest extends FormRequest
+{
+
+    const MATURE_YEARS = 18;
+
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return $this->user()->birthday < Carbon::now()->subYears(self::MATURE_YEARS)->format('Y-m-d');
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+        ];
+    }
+}
+```
+
+And finally update `store` method in our controller:
+
+```php
+use App\Http\Requests\RentACarRequest;
+use Illuminate\Http\JsonResponse;
+
+/**
+ * @param RentACarRequest $request
+ * @return JsonResponse
+ */
+public function store(RentACarRequest $request): JsonResponse
+{
+    return new JsonResponse(['status' => true, 'message' => 'Booking has been created'], 201);
+}
+```
+
+So we have simple API that dosn't do anything smart yet, but respose with success or not.
+We can use it already test it with our scenario.
+
+For that, we are going to use Laravel testing soultions, that are not prepared in the box like normal tests, 
+so we will need to add some traits that laravel already has, and declare application.
+
+```php
+// ...
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithAuthentication;
+use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
+use Tests\CreatesApplication;
+// ...
+
+class FeatureContext extends MinkContext implements Context
+{
+    use InteractsWithAuthentication;
+    use MakesHttpRequests;
+    use CreatesApplication;
+    
+    private User $user;
+    private Application $app;
+
+    /**
+     * Initializes context.
+     *
+     * Every scenario gets its own context instance.
+     * You can also pass arbitrary arguments to the
+     * context constructor through behat.yml.
+     */
+    public function __construct()
+    {
+        $this->app = $this->createApplication();
+    }
+
+    /**
+     * @When :customer, wants to rent :carName car
+     */
+    public function wantsToRentACar($customer, $brand)
+    {
+        $this->response = $this->actingAs($this->user, 'api')->json('POST', '/api/rent', ['car' => $brand]);
+    }
+}
+```
+
+Now when we run `vendor/bin/behat` we will have 2 steps passed. Now we need to write the last one, asserting.
+
+### Stage 4.2 - Assert
+
+Now, final step - we need to check if our code works like expected.
+
+```php
+/**
+ * @Then :customer will be able to rent a car
+ */
+public function willBeAbleToRentACar($customer)
+{
+    $this->response->assertCreated();
+}
+
+/**
+ * @Then :customer will be not able to rent a car
+ */
+public function willBeNotAbleToRentACar($customer)
+{
+    $this->response->assertStatus(403);
+}
+```
+
+After running behat we will receive:
+
+```
+Feature: Rent a car
+  In order to rent a car
+  As a customer
+  I need to be able to order a car
+  
+  Rule:
+  - Customer have to have at least 18yo
+  - Customer may rent one car at a time
+  - There are limited numbers of cars, customer may not rent reserved car
+
+  Scenario: I can rent a car if i have 18yo                         # features/rentacar.feature:11
+    Given there is a "Tabaluga Dragon", that was born in 1997-10-04 # FeatureContext::thereIsAThatWasBornIn()
+    When "Tabaluga Dragon", wants to rent "Jeep" car                # FeatureContext::wantsToRentACar()
+    Then "Tabaluga Dragon" will be able to rent a car               # FeatureContext::willBeAbleToRentACar()
+
+  Scenario: I can't rent a car if i don't have 18yo        # features/rentacar.feature:16
+    Given there is a "Minion", that was born in 2015-06-26 # FeatureContext::thereIsAThatWasBornIn()
+    When "Minion", wants to rent "Jeep" car                # FeatureContext::wantsToRentACar()
+    Then "Minion" will be not able to rent a car           # FeatureContext::willBeNotAbleToRentACar()
+
+2 scenarios (2 passed)
+6 steps (6 passed)
+0m0.29s (30.14Mb)
+```
+
+So our both tests passed! As you see, we used the same methods for arrange, and act, but different for asserts.
+Now if you would like to implement more features, you can use the same syntax, and check other feature, without writing new pending definitions.
