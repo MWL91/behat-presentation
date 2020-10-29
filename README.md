@@ -68,7 +68,7 @@ touch database/database.sqlite
 
 Now we are ready to go with our environment using behat.
 
-## Mink 1 - tests with Mink
+## Mink 1 - configure behat
 
 Now, when we have our environment ready to go, we can start with initialize Behat.
 
