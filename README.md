@@ -529,7 +529,7 @@ Scenario: I can rent one car at a time
 As you see, we need to write only one new definition to make it works, all others are already covered.
 
 Now when we run `vendor/bin/behat` we see that our new scenario dosn't have step. 
-When we select `FeatureContext` class, we will generate new definition, but as you see it'ss just one method.
+When we select `FeatureContext` class, we will generate new definition, but as you see it's just one method.
 
 ```php
 /**
@@ -546,7 +546,7 @@ We can use here database relations, but as it's just an example code, let's add 
 
 ```php
 /**
- * @Given :customer has already rented :carName car$/
+ * @Given :customer has already rented :carName car
  */
 public function hasAlreadyRentedCar($customer, $carName)
 {
@@ -571,7 +571,7 @@ private function canUserRentCar(): bool
 
 private function isMature(): bool
 {
-    return $this->user()->birthday < Carbon::now()->subYears(self::MATURE_YEARS)->format('Y-m-d');
+    return $this->user()->birthday < Carbon::now()->subYears(self::MATURE_YEARS);
 }
 
 private function hasRentedCar(): bool

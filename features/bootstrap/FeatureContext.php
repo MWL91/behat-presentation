@@ -1,5 +1,6 @@
 <?php
 
+use Behat\Behat\Tester\Exception\PendingException;
 use App\Models\User;
 use Behat\Behat\Tester\Exception\PendingException;
 use Behat\Behat\Context\Context;
@@ -82,5 +83,13 @@ class FeatureContext extends MinkContext implements Context
     public function willBeNotAbleToRentACar($customer)
     {
         $this->response->assertStatus(403);
+    }
+
+    /**
+     * @Given :customer has already rented :carName car
+     */
+    public function hasAlreadyRentedCar($customer, $carName)
+    {
+        $this->user->car = $carName;
     }
 }

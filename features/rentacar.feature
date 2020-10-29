@@ -21,5 +21,11 @@ Feature: Rent a car
   Scenario: I can rent one car at a time
     Given there is a "Tabaluga Dragon", that was born in 1997-10-04
     And "Tabaluga Dragon" has already rented "Jeep" car
+    When "Tabaluga Dragon", wants to rent "Jeep" car
+    Then "Tabaluga Dragon" will be not able to rent a car
+
+  Scenario: I can rent one car at a time
+    Given there is a "Tabaluga Dragon", that was born in 1997-10-04
+    And "Tabaluga Dragon" has already rented "Jeep" car
     When "Tabaluga Dragon", wants to rent a car
     Then "Tabaluga Dragon" will be not able to rent a car
