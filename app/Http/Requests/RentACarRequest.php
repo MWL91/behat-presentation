@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Car;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
 
@@ -44,5 +45,10 @@ class RentACarRequest extends FormRequest
     {
         return [
         ];
+    }
+
+    public function getCar(): Car
+    {
+        return Car::where('car', $this->get('car'))->firstOrFail();
     }
 }

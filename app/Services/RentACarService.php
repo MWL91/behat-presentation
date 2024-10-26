@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Car;
 use App\Models\User;
 
-class RentACarService
+class RentACarService implements RentService
 {
     public function rentCarAsUser(User $user, Car $car): void
     {

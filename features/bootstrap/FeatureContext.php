@@ -19,6 +19,8 @@ use Illuminate\Foundation\Testing\Concerns\InteractsWithTime;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
 use Illuminate\Foundation\Testing\Concerns\MocksApplicationServices;
+use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Testing\TestResponse;
 use Laracasts\Behat\Context\DatabaseTransactions;
 use PHPUnit\Framework\Assert;
 use Tests\CreatesApplication;
@@ -35,6 +37,7 @@ class FeatureContext extends MinkContext implements Context
 
     private User $user;
     private Application $app;
+    private TestResponse $response;
 
     /**
      * Initializes context.
@@ -53,7 +56,14 @@ class FeatureContext extends MinkContext implements Context
      */
     public function thereIsAThatWasBornIn($customer, $year, $month, $day)
     {
-        $this->user = User::factory()->create(['name' => $customer, 'birthday' => Carbon::create($year, $month, $day)]);
+        $this->user = new User([
+            'name' => $customer,
+            'birthday' => now()->setDate($year, $month, $day),
+            'email' => uniqid() . '@example.com',
+            'password' => Hash::make('secret'),
+            'remember_token' => Str::random(10),
+        ]);
+        $this->user->save();
     }
 
     /**
